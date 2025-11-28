@@ -1,126 +1,9 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
-<head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>沖繩家庭旅遊 2026</title>
-    <style>
-        body {
-            margin: 0;
-            font-family: sans-serif;
-            background: #f5f7fa;
-            color: #333;
-        }
-        header img {
-            width: 100%;
-            display: block;
-            border-bottom: 3px solid #ddd;
-        }
-        .container {
-            max-width: 900px;
-            margin: auto;
-            padding: 0 20px 40px;
-        }
-        nav {
-            display: flex;
-            justify-content: center;
-            gap: 20px;
-            margin: 20px 0;
-        }
-        nav button {
-            background: #fff;
-            border: 1px solid #ccc;
-            border-radius: 6px;
-            padding: 10px 15px;
-            cursor: pointer;
-            font-size: 16px;
-        }
-        nav button.active {
-            background: #0078d7;
-            color: #fff;
-            border-color: #0078d7;
-        }
+<header>
+  <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=1400&q=60" alt="Okinawa" />
+</header>
 
-        h1 {
-            text-align: center;
-            margin-top: 10px;
-            line-height: 1.4;
-        }
-
-        /* 行程區域 */
-        .day-block {
-            background: #fff;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 15px;
-            border: 1px solid #ddd;
-        }
-        .day-header {
-            display: flex;
-            justify-content: space-between;
-            cursor: pointer;
-            font-weight: bold;
-        }
-        .day-content {
-            margin-top: 10px;
-            display: none;
-        }
-        .item {
-            background: #f1f3f5;
-            padding: 10px;
-            border-radius: 6px;
-            margin-bottom: 10px;
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-        }
-        .item input, .item textarea {
-            width: 100%;
-            padding: 6px;
-        }
-        .add-btn {
-            margin-top: 10px;
-            padding: 8px 14px;
-            background: #0078d7;
-            color: white;
-            border-radius: 6px;
-            border: none;
-            cursor: pointer;
-        }
-        .save-btn {
-            padding: 6px 12px;
-            background: #28a745;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-        }
-        .delete-btn {
-            padding: 4px 8px;
-            background: #dc3545;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-        }
-
-        /* 匯率 */
-        .rate-box {
-            background: #fff;
-            padding: 20px;
-            border-radius: 8px;
-            border: 1px solid #ddd;
-            text-align: center;
-        }
-        .rate-box input {
-            width: 80%;
-            padding: 10px;
-            margin: 10px 0;
-            font-size: 18px;
-            text-align: center;
-        }
-    </style>
-</head>
 <body>
 <header>
     <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/4/47/Okinawa_Churaumi_Aquarium_gyokusendo_park.jpg/1920px-Okinawa_Churaumi_Aquarium_gyokusendo_park.jpg" alt="Okinawa" />
@@ -155,110 +38,164 @@
 </div>
 
 <script>
-// Tabs
-const tabTrip = document.getElementById('tab-trip');
-const tabRate = document.getElementById('tab-rate');
-const pageTrip = document.getElementById('page-trip');
-const pageRate = document.getElementById('page-rate');
-
-tabTrip.onclick = () => {
-    tabTrip.classList.add('active');
-    tabRate.classList.remove('active');
-    pageTrip.style.display = 'block';
-    pageRate.style.display = 'none';
-};
-
-tabRate.onclick = () => {
-    tabRate.classList.add('active');
-    tabTrip.classList.remove('active');
-    pageTrip.style.display = 'none';
-    pageRate.style.display = 'block';
-};
-
-// localStorage
-let days = JSON.parse(localStorage.getItem('okinawaDays') || '[]');
-
-function saveDays() {
-    localStorage.setItem('okinawaDays', JSON.stringify(days));
-    renderDays();
+// -------------------------------
+// 🌟 Tabs 切換
+// -------------------------------
+function showTab(tabId) {
+    document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
+    document.getElementById(tabId).style.display = 'block';
 }
 
-function addDay() {
-    days.push({ title: "未命名行程", items: [] });
-    saveDays();
-}
+// -------------------------------
+// 🌟 行程資料存取 localStorage
+// -------------------------------
+let itinerary = JSON.parse(localStorage.getItem('itineraryData')) || [];
 
-function addItem(index) {
-    days[index].items.push({ time: "", place: "", text: "", map: "" });
-    saveDays();
-}
+// -------------------------------
+// 🌟 Render 行程列表
+// -------------------------------
+function renderItinerary() {
+    const container = document.getElementById('itinerary-list');
+    container.innerHTML = "";
 
-function renderDays() {
-    const container = document.getElementById('days');
-    container.innerHTML = '';
+    itinerary.forEach((item, index) => {
+        const div = document.createElement('div');
+        div.className = "itinerary-item";
+        div.draggable = true;
 
-    days.forEach((day, i) => {
-        const block = document.createElement('div');
-        block.className = 'day-block';
-
-        block.innerHTML = `
-            <div class="day-header" onclick="toggle(${i})">
-                <span contenteditable="true" onblur="updateTitle(${i}, this.innerText)">${day.title}</span>
-                <span>▼</span>
+        div.innerHTML = `
+            <div class="itinerary-header">
+                <span class="drag-handle">☰</span>
+                <span contenteditable="true" class="item-title" data-index="${index}">
+                    ${item.title || "未命名行程"}
+                </span>
+                <button onclick="deleteItem(${index})" class="delete-btn">刪除</button>
             </div>
-            <div class="day-content" id="content-${i}">
-                ${day.items.map((item, k) => `
-                    <div class="item">
-                        <input placeholder="時間" value="${item.time}" oninput="editItem(${i},${k},'time',this.value)" />
-                        <input placeholder="地點" value="${item.place}" oninput="editItem(${i},${k},'place',this.value)" />
-                        <textarea placeholder="描述" oninput="editItem(${i},${k},'text',this.value)">${item.text}</textarea>
-                        <input placeholder="Google Map 連結" value="${item.map}" oninput="editItem(${i},${k},'map',this.value)" />
-                        <button class="delete-btn" onclick="deleteItem(${i},${k})">刪除</button>
-                    </div>
-                `).join('')}
-                <button class="add-btn" onclick="addItem(${i})">＋ 新增行程內容</button>
+            <div class="itinerary-body">
+                <label>時間：</label>
+                <input type="text" value="${item.time}" data-index="${index}" data-field="time">
+
+                <label>地點：</label>
+                <input type="text" value="${item.location}" data-index="${index}" data-field="location">
+
+                <label>介紹：</label>
+                <textarea data-index="${index}" data-field="desc">${item.desc}</textarea>
+
+                <label>Google Map 連結：</label>
+                <input type="text" value="${item.map}" data-index="${index}" data-field="map">
             </div>
         `;
 
-        container.appendChild(block);
+        // 拖曳排序
+        div.addEventListener("dragstart", (e) => {
+            e.dataTransfer.setData("text/plain", index);
+        });
+
+        div.addEventListener("dragover", (e) => e.preventDefault());
+
+        div.addEventListener("drop", (e) => {
+            e.preventDefault();
+            const from = e.dataTransfer.getData("text/plain");
+            const to = index;
+            moveItem(from, to);
+        });
+
+        container.appendChild(div);
+    });
+
+    attachInputListeners();
+}
+
+// -------------------------------
+// 🌟 新增行程
+// -------------------------------
+function addItem() {
+    itinerary.push({
+        title: "",
+        time: "",
+        location: "",
+        desc: "",
+        map: ""
+    });
+    saveData();
+    renderItinerary();
+}
+
+// -------------------------------
+// 🌟 刪除行程
+// -------------------------------
+function deleteItem(index) {
+    itinerary.splice(index, 1);
+    saveData();
+    renderItinerary();
+}
+
+// -------------------------------
+// 🌟 拖曳移動排序
+// -------------------------------
+function moveItem(from, to) {
+    const item = itinerary.splice(from, 1)[0];
+    itinerary.splice(to, 0, item);
+    saveData();
+    renderItinerary();
+}
+
+// -------------------------------
+// 🌟 Input 即時更新
+// -------------------------------
+function attachInputListeners() {
+    document.querySelectorAll("input, textarea, .item-title").forEach(el => {
+        el.addEventListener("input", () => {
+            const index = el.dataset.index;
+            const field = el.dataset.field;
+
+            if (el.classList.contains("item-title")) {
+                itinerary[index].title = el.innerText.trim();
+            } else {
+                itinerary[index][field] = el.value;
+            }
+
+            saveData();
+        });
     });
 }
 
-function toggle(i) {
-    const el = document.getElementById(`content-${i}`);
-    el.style.display = el.style.display === 'none' ? 'block' : 'none';
+// -------------------------------
+// 🌟 存入 localStorage
+// -------------------------------
+function saveData() {
+    localStorage.setItem("itineraryData", JSON.stringify(itinerary));
 }
 
-function updateTitle(i, text) {
-    days[i].title = text;
-    saveDays();
-}
+// -------------------------------
+// 🌟 匯率換算 (台幣 ↔ 日幣)
+// -------------------------------
+function setupExchangeCalculator() {
+    const twd = document.getElementById("twd");
+    const jpy = document.getElementById("jpy");
 
-function editItem(i,k,key,value) {
-    days[i].items[k][key] = value;
-    saveDays();
-}
+    function convert(from) {
+        const rate = 4.5; // 你可自訂匯率
 
-function deleteItem(i,k) {
-    days[i].items.splice(k,1);
-    saveDays();
-}
-
-renderDays();
-
-// 匯率換算
-const rate = 5; // 1 TWD = 5 JPY
-
-function convert(type) {
-    const twd = document.getElementById('twd');
-    const jpy = document.getElementById('jpy');
-
-    if (type === 'twd') {
-        jpy.value = twd.value ? Math.round(twd.value * rate) : '';
-    } else {
-        twd.value = jpy.value ? (jpy.value / rate).toFixed(2) : '';
+        if (from === "twd") {
+            jpy.value = (twd.value * rate).toFixed(0);
+        } else {
+            twd.value = (jpy.value / rate).toFixed(0);
+        }
     }
+
+    twd.addEventListener("input", () => convert("twd"));
+    jpy.addEventListener("input", () => convert("jpy"));
 }
+
+// -------------------------------
+// 🌟 初始化
+// -------------------------------
+document.addEventListener("DOMContentLoaded", () => {
+    showTab('tab-itinerary');
+    renderItinerary();
+    setupExchangeCalculator();
+});
 </script>
 </body>
 </html>
