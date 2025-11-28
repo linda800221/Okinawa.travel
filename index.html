@@ -1,106 +1,148 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>我的旅遊行程 APP</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>沖繩旅行</title>
 <style>
-  body { font-family: sans-serif; padding: 20px; background: #fafafa; }
-  h2 { margin-top: 28px; }
-  .day-box {
-    background: white; padding: 15px; border-radius: 10px;
-    margin-top: 10px; box-shadow: 0 2px 5px rgba(0,0,0,.1);
+  body {
+    margin: 0;
+    font-family: sans-serif;
+    background: #f4f7fa;
   }
-  .place { font-weight: bold; margin-top: 8px; }
-  .link { color: #0066cc; text-decoration: none; }
-  .converter {
-    background: #fff; padding: 15px; border-radius: 10px; margin-top: 20px;
-    box-shadow: 0 2px 5px rgba(0,0,0,.1);
+  /* Header */
+  .hero {
+    width: 100%;
+    height: 220px;
+    background-image: url('https://images.unsplash.com/photo-1507525428034-b723cf961d3e');
+    background-size: cover;
+    background-position: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 2rem;
+    font-weight: bold;
+    text-shadow: 0 2px 6px rgba(0,0,0,0.3);
   }
-  input { padding: 8px; width: 100%; margin-top: 8px; }
-  button { margin-top: 10px; padding: 10px; width: 100%; }
+
+  /* Tabs */
+  .tabs {
+    display: flex;
+    background: #fff;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  }
+  .tab {
+    flex: 1;
+    text-align: center;
+    padding: 15px;
+    cursor: pointer;
+    font-size: 1.1rem;
+  }
+  .tab.active {
+    background: #e3f2fd;
+    font-weight: bold;
+  }
+
+  /* Content */
+  .page {
+    display: none;
+    padding: 20px;
+  }
+  .page.active {
+    display: block;
+  }
+
+  /* Accordion */
+  .day {
+    background: white;
+    margin-bottom: 10px;
+    border-radius: 6px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  }
+  .day-title {
+    padding: 15px;
+    background: #bbdefb;
+    cursor: pointer;
+    font-weight: bold;
+  }
+  .day-content {
+    padding: 15px;
+    display: none;
+    background: #fff;
+  }
 </style>
 </head>
-
 <body>
-<h1>✈ 我的旅遊行程 APP</h1>
 
-<div id="itinerary"></div>
+<div class="hero">沖繩旅遊計畫</div>
 
-<h2>💱 匯率換算（台幣 ↔ 他國貨幣）</h2>
-<div class="converter">
-  <label>台幣（TWD）：</label>
-  <input id="twd" type="number" placeholder="輸入金額">
-  
-  <label style="margin-top:12px;">外幣（自訂匯率）：</label>
-  <input id="rate" type="number" placeholder="輸入匯率，例如：0.22">
-  
-  <button onclick="convert()">開始換算</button>
+<!-- Tabs -->
+<div class="tabs">
+  <div class="tab active" data-target="travel">旅遊</div>
+  <div class="tab" data-target="currency">匯率換算</div>
+</div>
+
+<!-- Travel Page -->
+<div id="travel" class="page active">
+  <h2>每日行程</h2>
+
+  <div class="day">
+    <div class="day-title">Day 1｜抵達沖繩</div>
+    <div class="day-content">行程內容：抵達、飯店 check-in、AEON 超市</div>
+  </div>
+
+  <div class="day">
+    <div class="day-title">Day 2｜美麗海水族館</div>
+    <div class="day-content">行程內容：水族館、海灘散步、晚餐燒肉</div>
+  </div>
+
+  <div class="day">
+    <div class="day-title">Day 3｜北谷美國村</div>
+    <div class="day-content">行程內容：拍照、購物、看夕陽</div>
+  </div>
+</div>
+
+<!-- Currency Page -->
+<div id="currency" class="page">
+  <h2>匯率換算</h2>
+  <p>輸入台幣換算為日圓：</p>
+  <input id="twd" type="number" placeholder="TWD" />
+  <button onclick="convert()">換算</button>
   <p id="result"></p>
 </div>
 
 <script>
-// ------------------------
-//  旅遊資料（你可以隨意改）
-// ------------------------
-const itineraryData = [
-  {
-    day: "Day 1",
-    title: "抵達、入住、周邊散策",
-    places: [
-      { name: "飯店 Check-in", map: "https://maps.google.com" },
-      { name: "附近逛街", map: "https://maps.google.com" }
-    ]
-  },
-  {
-    day: "Day 2",
-    title: "市區觀光",
-    places: [
-      { name: "博物館", map: "https://maps.google.com" },
-      { name: "午餐：海鮮餐廳", map: "https://maps.google.com" },
-      { name: "港邊散步", map: "https://maps.google.com" }
-    ]
-  }
-];
+  // Tab Switch
+  const tabs = document.querySelectorAll('.tab');
+  const pages = document.querySelectorAll('.page');
 
-
-// ------------------------
-//  用 JS 產生行程畫面
-// ------------------------
-function loadItinerary() {
-  const container = document.getElementById('itinerary');
-  itineraryData.forEach(day => {
-    const box = document.createElement('div');
-    box.className = 'day-box';
-    box.innerHTML = `
-      <h2>${day.day}｜${day.title}</h2>
-      ${day.places.map(p => `
-        <div class="place">${p.name}</div>
-        <a class="link" href="${p.map}" target="_blank">查看地圖</a>
-      `).join('')}
-    `;
-    container.appendChild(box);
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      tabs.forEach(t => t.classList.remove('active'));
+      pages.forEach(p => p.classList.remove('active'));
+      tab.classList.add('active');
+      document.getElementById(tab.dataset.target).classList.add('active');
+    });
   });
-}
-loadItinerary();
 
+  // Accordion
+  document.querySelectorAll('.day-title').forEach(title => {
+    title.addEventListener('click', () => {
+      const content = title.nextElementSibling;
+      const isOpen = content.style.display === 'block';
+      content.style.display = isOpen ? 'none' : 'block';
+    });
+  });
 
-// ------------------------
-//  匯率換算小工具
-// ------------------------
-function convert() {
-  const twd = parseFloat(document.getElementById('twd').value);
-  const rate = parseFloat(document.getElementById('rate').value);
-  const result = document.getElementById('result');
-
-  if (isNaN(twd) || isNaN(rate)) {
-    result.innerHTML = "請輸入金額與匯率！";
-    return;
+  // Simple TWD -> JPY
+  function convert() {
+    const rate = 4.8; // 可自行調整
+    const twd = document.getElementById('twd').value;
+    if (!twd) return;
+    document.getElementById('result').innerText = `${twd} TWD → ${(twd * rate).toFixed(0)} JPY`;
   }
-
-  const foreign = (twd * rate).toFixed(2);
-  result.innerHTML = `結果：${foreign}`;
-}
 </script>
 
 </body>
