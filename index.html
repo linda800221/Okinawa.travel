@@ -105,12 +105,14 @@
 </div>
 
 <!-- Currency Page -->
-<div id="currency" class="page">
-  <h2>匯率換算</h2>
-  <p>輸入台幣換算為日圓：</p>
-  <input id="twd" type="number" placeholder="TWD" />
-  <button onclick="convert()">換算</button>
-  <p id="result"></p>
+<div id="page-rate" style="display:none;">
+<div class="rate-box">
+<h2>匯率換算</h2>
+<p>請輸入任意欄位，自動換算</p>
+<input id="twd" placeholder="輸入新台幣 TWD" oninput="convert('twd')" />
+<input id="jpy" placeholder="輸入日圓 JPY" oninput="convert('jpy')" />
+<p>匯率採用：1 TWD = 5 JPY（可自行修改 JS）</p>
+</div>
 </div>
 
 <script>
