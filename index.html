@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>我的旅遊行程 APP</title>
+<style>
+  body { font-family: sans-serif; padding: 20px; background: #fafafa; }
+  h2 { margin-top: 28px; }
+  .day-box {
+    background: white; padding: 15px; border-radius: 10px;
+    margin-top: 10px; box-shadow: 0 2px 5px rgba(0,0,0,.1);
+  }
+  .place { font-weight: bold; margin-top: 8px; }
+  .link { color: #0066cc; text-decoration: none; }
+  .converter {
+    background: #fff; padding: 15px; border-radius: 10px; margin-top: 20px;
+    box-shadow: 0 2px 5px rgba(0,0,0,.1);
+  }
+  input { padding: 8px; width: 100%; margin-top: 8px; }
+  button { margin-top: 10px; padding: 10px; width: 100%; }
+</style>
+</head>
+
+<body>
+<h1>✈ 我的旅遊行程 APP</h1>
+
+<div id="itinerary"></div>
+
+<h2>💱 匯率換算（台幣 ↔ 他國貨幣）</h2>
+<div class="converter">
+  <label>台幣（TWD）：</label>
+  <input id="twd" type="number" placeholder="輸入金額">
+  
+  <label style="margin-top:12px;">外幣（自訂匯率）：</label>
+  <input id="rate" type="number" placeholder="輸入匯率，例如：0.22">
+  
+  <button onclick="convert()">開始換算</button>
+  <p id="result"></p>
+</div>
+
+<script>
+// ------------------------
+//  旅遊資料（你可以隨意改）
+// ------------------------
+const itineraryData = [
+  {
+    day: "Day 1",
+    title: "抵達、入住、周邊散策",
+    places: [
+      { name: "飯店 Check-in", map: "https://maps.google.com" },
+      { name: "附近逛街", map: "https://maps.google.com" }
+    ]
+  },
+  {
+    day: "Day 2",
+    title: "市區觀光",
+    places: [
+      { name: "博物館", map: "https://maps.google.com" },
+      { name: "午餐：海鮮餐廳", map: "https://maps.google.com" },
+      { name: "港邊散步", map: "https://maps.google.com" }
+    ]
+  }
+];
+
+
+// ------------------------
+//  用 JS 產生行程畫面
+// ------------------------
+function loadItinerary() {
+  const container = document.getElementById('itinerary');
+  itineraryData.forEach(day => {
+    const box = document.createElement('div');
+    box.className = 'day-box';
+    box.innerHTML = `
+      <h2>${day.day}｜${day.title}</h2>
+      ${day.places.map(p => `
+        <div class="place">${p.name}</div>
+        <a class="link" href="${p.map}" target="_blank">查看地圖</a>
+      `).join('')}
+    `;
+    container.appendChild(box);
+  });
+}
+loadItinerary();
+
+
+// ------------------------
+//  匯率換算小工具
+// ------------------------
+function convert() {
+  const twd = parseFloat(document.getElementById('twd').value);
+  const rate = parseFloat(document.getElementById('rate').value);
+  const result = document.getElementById('result');
+
+  if (isNaN(twd) || isNaN(rate)) {
+    result.innerHTML = "請輸入金額與匯率！";
+    return;
+  }
+
+  const foreign = (twd * rate).toFixed(2);
+  result.innerHTML = `結果：${foreign}`;
+}
+</script>
+
+</body>
+</html>
