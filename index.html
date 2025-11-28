@@ -1,160 +1,305 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <title>沖繩家庭旅遊 2026</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: "Helvetica", "Noto Sans TC", sans-serif;
+            background: #f4f7fa;
+            color: #333;
+        }
+
+        /* 讓所有內容置中 & 左右留白 */
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        header {
+            background: url('https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=1400&q=60') 
+                        center/cover no-repeat;
+            padding: 40px 20px;
+            color: white;
+            text-shadow: 0 2px 5px rgba(0,0,0,0.5);
+            text-align: center;
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        header h2 {
+            margin: 5px 0 0 0;
+            font-size: 18px;
+            font-weight: 400;
+        }
+
+        nav {
+            display: flex;
+            background: white;
+            border-bottom: 1px solid #ddd;
+        }
+
+        nav button {
+            flex: 1;
+            padding: 15px 0;
+            border: none;
+            background: white;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        nav button.active {
+            background: #e3f2fd;
+            font-weight: bold;
+        }
+
+        .page {
+            display: none;
+            padding: 20px;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        /* 行程樣式 */
+        .day-block {
+            background: white;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            padding: 15px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+        }
+
+        .day-title {
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .items {
+            margin-top: 10px;
+            display: none;
+        }
+
+        .item {
+            background: #fafafa;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+
+        input, textarea {
+            width: 100%;
+            padding: 6px;
+            margin-top: 5px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+        }
+
+        .button {
+            padding: 8px 12px;
+            background: #1976d2;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        .delete-btn {
+            background: #d32f2f;
+        }
+
+        .sub-btn {
+            background: #0288d1;
+        }
+
+        img.preview {
+            width: 100%;
+            border-radius: 8px;
+            margin-top: 8px;
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <h1>沖繩家庭旅遊</h1>
+    <h2>2026.4.6 ~ 2026.4.11</h2>
+</header>
+
+<div class="container">
+
+<nav>
+    <button id="tab-trip" class="active">🗺️ 行程</button>
+    <button id="tab-rate">💱 匯率換算</button>
+</nav>
+
+<!-- 行程頁面 -->
+<div id="page-trip" class="page active">
+    <button class="button" onclick="addDay()">＋ 新增一天</button>
+    <div id="day-list"></div>
+</div>
+
+<!-- 匯率換算頁面：已簡化成兩欄位可雙向計算 -->
+<div id="page-rate" class="page">
+    <h3>匯率換算（台幣 ⇄ 日幣）</h3>
+
+    <label>請輸入匯率（1 日幣 = ? 台幣）</label>
+    <input id="rate" type="number" value="0.22" step="0.01">
+
+    <label>日幣</label>
+    <input id="jpy" type="number">
+
+    <label>台幣</label>
+    <input id="twd" type="number">
+</div>
+
+</div><!-- container end -->
+
 <script>
-// -------------------------------
-// 🌟 Tabs 切換
-// -------------------------------
-function showTab(tabId) {
-    document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
-    document.getElementById(tabId).style.display = 'block';
+/* ---------------- 分頁切換 ---------------- */
+document.getElementById("tab-trip").onclick = () => switchTab("trip");
+document.getElementById("tab-rate").onclick = () => switchTab("rate");
+
+function switchTab(tab) {
+    document.querySelectorAll("nav button").forEach(b => b.classList.remove("active"));
+    document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+
+    document.getElementById("tab-" + tab).classList.add("active");
+    document.getElementById("page-" + tab).classList.add("active");
 }
 
-// -------------------------------
-// 🌟 行程資料存取 localStorage
-// -------------------------------
-let itinerary = JSON.parse(localStorage.getItem('itineraryData')) || [];
+/* ---------------- 行程資料管理 ---------------- */
 
-// -------------------------------
-// 🌟 Render 行程列表
-// -------------------------------
-function renderItinerary() {
-    const container = document.getElementById('itinerary-list');
+let tripData = JSON.parse(localStorage.getItem("tripData") || "[]");
+renderDays();
+
+function save() {
+    localStorage.setItem("tripData", JSON.stringify(tripData));
+}
+
+function addDay() {
+    tripData.push({ title: "未命名行程", items: [], open: true });
+    save();
+    renderDays();
+}
+
+function toggleDay(i) {
+    tripData[i].open = !tripData[i].open;
+    save();
+    renderDays();
+}
+
+function addItem(dayIndex) {
+    tripData[dayIndex].items.push({
+        time: "",
+        place: "",
+        desc: "",
+        map: "",
+        img: ""
+    });
+    save();
+    renderDays();
+}
+
+function deleteItem(dayIndex, itemIndex) {
+    tripData[dayIndex].items.splice(itemIndex, 1);
+    save();
+    renderDays();
+}
+
+function handleImageUpload(event, dayIndex, itemIndex) {
+    const file = event.target.files[0];
+    const reader = new FileReader();
+    reader.onload = () => {
+        tripData[dayIndex].items[itemIndex].img = reader.result;
+        save();
+        renderDays();
+    };
+    reader.readAsDataURL(file);
+}
+
+function renderDays() {
+    const container = document.getElementById("day-list");
     container.innerHTML = "";
 
-    itinerary.forEach((item, index) => {
-        const div = document.createElement('div');
-        div.className = "itinerary-item";
-        div.draggable = true;
+    tripData.forEach((day, i) => {
+        const block = document.createElement("div");
+        block.className = "day-block";
 
-        div.innerHTML = `
-            <div class="itinerary-header">
-                <span class="drag-handle">☰</span>
-                <span contenteditable="true" class="item-title" data-index="${index}">
-                    ${item.title || "未命名行程"}
-                </span>
-                <button onclick="deleteItem(${index})" class="delete-btn">刪除</button>
+        block.innerHTML = `
+            <div class="day-title" onclick="toggleDay(${i})">
+                <span contenteditable="true" oninput="tripData[${i}].title=this.innerText; save();">${day.title}</span>
+                <span>${day.open ? "▼" : "▶"}</span>
             </div>
-            <div class="itinerary-body">
-                <label>時間：</label>
-                <input type="text" value="${item.time}" data-index="${index}" data-field="time">
 
-                <label>地點：</label>
-                <input type="text" value="${item.location}" data-index="${index}" data-field="location">
+            <div class="items" style="display:${day.open ? "block" : "none"};">
+                ${day.items.map((item, j) => `
+                    <div class="item">
+                        <label>時間</label>
+                        <input value="${item.time}" oninput="tripData[${i}].items[${j}].time=this.value; save();">
 
-                <label>介紹：</label>
-                <textarea data-index="${index}" data-field="desc">${item.desc}</textarea>
+                        <label>地點</label>
+                        <input value="${item.place}" oninput="tripData[${i}].items[${j}].place=this.value; save();">
 
-                <label>Google Map 連結：</label>
-                <input type="text" value="${item.map}" data-index="${index}" data-field="map">
+                        <label>文字介紹</label>
+                        <textarea oninput="tripData[${i}].items[${j}].desc=this.value; save();">${item.desc}</textarea>
+
+                        <label>Google Map 連結</label>
+                        <input value="${item.map}" oninput="tripData[${i}].items[${j}].map=this.value; save();">
+
+                        <label>圖片上傳</label>
+                        <input type="file" accept="image/*" onchange="handleImageUpload(event, ${i}, ${j})">
+
+                        ${item.img ? `<img class="preview" src="${item.img}">` : ""}
+
+                        <button class="button delete-btn" onclick="deleteItem(${i}, ${j})">刪除這筆</button>
+                    </div>
+                `).join("")}
+
+                <button class="button sub-btn" onclick="addItem(${i})">＋ 新增行程項目</button>
             </div>
         `;
 
-        // 拖曳排序
-        div.addEventListener("dragstart", (e) => {
-            e.dataTransfer.setData("text/plain", index);
-        });
-
-        div.addEventListener("dragover", (e) => e.preventDefault());
-
-        div.addEventListener("drop", (e) => {
-            e.preventDefault();
-            const from = e.dataTransfer.getData("text/plain");
-            const to = index;
-            moveItem(from, to);
-        });
-
-        container.appendChild(div);
-    });
-
-    attachInputListeners();
-}
-
-// -------------------------------
-// 🌟 新增行程
-// -------------------------------
-function addItem() {
-    itinerary.push({
-        title: "",
-        time: "",
-        location: "",
-        desc: "",
-        map: ""
-    });
-    saveData();
-    renderItinerary();
-}
-
-// -------------------------------
-// 🌟 刪除行程
-// -------------------------------
-function deleteItem(index) {
-    itinerary.splice(index, 1);
-    saveData();
-    renderItinerary();
-}
-
-// -------------------------------
-// 🌟 拖曳移動排序
-// -------------------------------
-function moveItem(from, to) {
-    const item = itinerary.splice(from, 1)[0];
-    itinerary.splice(to, 0, item);
-    saveData();
-    renderItinerary();
-}
-
-// -------------------------------
-// 🌟 Input 即時更新
-// -------------------------------
-function attachInputListeners() {
-    document.querySelectorAll("input, textarea, .item-title").forEach(el => {
-        el.addEventListener("input", () => {
-            const index = el.dataset.index;
-            const field = el.dataset.field;
-
-            if (el.classList.contains("item-title")) {
-                itinerary[index].title = el.innerText.trim();
-            } else {
-                itinerary[index][field] = el.value;
-            }
-
-            saveData();
-        });
+        container.appendChild(block);
     });
 }
 
-// -------------------------------
-// 🌟 存入 localStorage
-// -------------------------------
-function saveData() {
-    localStorage.setItem("itineraryData", JSON.stringify(itinerary));
-}
+/* ---------------- 匯率換算（最新簡化版本） ---------------- */
+const rateInput = document.getElementById("rate");
+const jpyInput = document.getElementById("jpy");
+const twdInput = document.getElementById("twd");
 
-// -------------------------------
-// 🌟 匯率換算 (台幣 ↔ 日幣)
-// -------------------------------
-function setupExchangeCalculator() {
-    const twd = document.getElementById("twd");
-    const jpy = document.getElementById("jpy");
+let activeField = null;
 
-    function convert(from) {
-        const rate = 4.5; // 你可自訂匯率
+jpyInput.addEventListener("input", () => {
+    if (activeField === "twd") return;
+    activeField = "jpy";
+    twdInput.value = (jpyInput.value * parseFloat(rateInput.value)).toFixed(0);
+    activeField = null;
+});
 
-        if (from === "twd") {
-            jpy.value = (twd.value * rate).toFixed(0);
-        } else {
-            twd.value = (jpy.value / rate).toFixed(0);
-        }
-    }
-
-    twd.addEventListener("input", () => convert("twd"));
-    jpy.addEventListener("input", () => convert("jpy"));
-}
-
-// -------------------------------
-// 🌟 初始化
-// -------------------------------
-document.addEventListener("DOMContentLoaded", () => {
-    showTab('tab-itinerary');
-    renderItinerary();
-    setupExchangeCalculator();
+twdInput.addEventListener("input", () => {
+    if (activeField === "jpy") return;
+    activeField = "twd";
+    jpyInput.value = (twdInput.value / parseFloat(rateInput.value)).toFixed(0);
+    activeField = null;
 });
 </script>
+
+</body>
+</html>
