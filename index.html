@@ -1,151 +1,160 @@
-<!DOCTYPE html>
-<html lang="zh-Hant">
-<head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>沖繩旅行</title>
-<style>
-  body {
-    margin: 0;
-    font-family: sans-serif;
-    background: #f4f7fa;
-  }
-  /* Header */
-  .hero {
-    width: 100%;
-    height: 220px;
-    background-image: url('https://images.unsplash.com/photo-1507525428034-b723cf961d3e');
-    background-size: cover;
-    background-position: center;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    font-size: 2rem;
-    font-weight: bold;
-    text-shadow: 0 2px 6px rgba(0,0,0,0.3);
-  }
-
-  /* Tabs */
-  .tabs {
-    display: flex;
-    background: #fff;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  }
-  .tab {
-    flex: 1;
-    text-align: center;
-    padding: 15px;
-    cursor: pointer;
-    font-size: 1.1rem;
-  }
-  .tab.active {
-    background: #e3f2fd;
-    font-weight: bold;
-  }
-
-  /* Content */
-  .page {
-    display: none;
-    padding: 20px;
-  }
-  .page.active {
-    display: block;
-  }
-
-  /* Accordion */
-  .day {
-    background: white;
-    margin-bottom: 10px;
-    border-radius: 6px;
-    overflow: hidden;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-  }
-  .day-title {
-    padding: 15px;
-    background: #bbdefb;
-    cursor: pointer;
-    font-weight: bold;
-  }
-  .day-content {
-    padding: 15px;
-    display: none;
-    background: #fff;
-  }
-</style>
-</head>
-<body>
-
-<div class="hero">沖繩旅遊計畫</div>
-
-<!-- Tabs -->
-<div class="tabs">
-  <div class="tab active" data-target="travel">旅遊</div>
-  <div class="tab" data-target="currency">匯率換算</div>
-</div>
-
-<!-- Travel Page -->
-<div id="travel" class="page active">
-  <h2>每日行程</h2>
-
-  <div class="day">
-    <div class="day-title">Day 1｜抵達沖繩</div>
-    <div class="day-content">行程內容：抵達、飯店 check-in、AEON 超市</div>
-  </div>
-
-  <div class="day">
-    <div class="day-title">Day 2｜美麗海水族館</div>
-    <div class="day-content">行程內容：水族館、海灘散步、晚餐燒肉</div>
-  </div>
-
-  <div class="day">
-    <div class="day-title">Day 3｜北谷美國村</div>
-    <div class="day-content">行程內容：拍照、購物、看夕陽</div>
-  </div>
-</div>
-
-<!-- Currency Page -->
-<div id="page-rate" style="display:none;">
-<div class="rate-box">
-<h2>匯率換算</h2>
-<p>請輸入任意欄位，自動換算</p>
-<input id="twd" placeholder="輸入新台幣 TWD" oninput="convert('twd')" />
-<input id="jpy" placeholder="輸入日圓 JPY" oninput="convert('jpy')" />
-<p>匯率採用：1 TWD = 5 JPY（可自行修改 JS）</p>
-</div>
-</div>
-
 <script>
-  // Tab Switch
-  const tabs = document.querySelectorAll('.tab');
-  const pages = document.querySelectorAll('.page');
+// -------------------------------
+// 🌟 Tabs 切換
+// -------------------------------
+function showTab(tabId) {
+    document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
+    document.getElementById(tabId).style.display = 'block';
+}
 
-  tabs.forEach(tab => {
-    tab.addEventListener('click', () => {
-      tabs.forEach(t => t.classList.remove('active'));
-      pages.forEach(p => p.classList.remove('active'));
-      tab.classList.add('active');
-      document.getElementById(tab.dataset.target).classList.add('active');
+// -------------------------------
+// 🌟 行程資料存取 localStorage
+// -------------------------------
+let itinerary = JSON.parse(localStorage.getItem('itineraryData')) || [];
+
+// -------------------------------
+// 🌟 Render 行程列表
+// -------------------------------
+function renderItinerary() {
+    const container = document.getElementById('itinerary-list');
+    container.innerHTML = "";
+
+    itinerary.forEach((item, index) => {
+        const div = document.createElement('div');
+        div.className = "itinerary-item";
+        div.draggable = true;
+
+        div.innerHTML = `
+            <div class="itinerary-header">
+                <span class="drag-handle">☰</span>
+                <span contenteditable="true" class="item-title" data-index="${index}">
+                    ${item.title || "未命名行程"}
+                </span>
+                <button onclick="deleteItem(${index})" class="delete-btn">刪除</button>
+            </div>
+            <div class="itinerary-body">
+                <label>時間：</label>
+                <input type="text" value="${item.time}" data-index="${index}" data-field="time">
+
+                <label>地點：</label>
+                <input type="text" value="${item.location}" data-index="${index}" data-field="location">
+
+                <label>介紹：</label>
+                <textarea data-index="${index}" data-field="desc">${item.desc}</textarea>
+
+                <label>Google Map 連結：</label>
+                <input type="text" value="${item.map}" data-index="${index}" data-field="map">
+            </div>
+        `;
+
+        // 拖曳排序
+        div.addEventListener("dragstart", (e) => {
+            e.dataTransfer.setData("text/plain", index);
+        });
+
+        div.addEventListener("dragover", (e) => e.preventDefault());
+
+        div.addEventListener("drop", (e) => {
+            e.preventDefault();
+            const from = e.dataTransfer.getData("text/plain");
+            const to = index;
+            moveItem(from, to);
+        });
+
+        container.appendChild(div);
     });
-  });
 
-  // Accordion
-  document.querySelectorAll('.day-title').forEach(title => {
-    title.addEventListener('click', () => {
-      const content = title.nextElementSibling;
-      const isOpen = content.style.display === 'block';
-      content.style.display = isOpen ? 'none' : 'block';
+    attachInputListeners();
+}
+
+// -------------------------------
+// 🌟 新增行程
+// -------------------------------
+function addItem() {
+    itinerary.push({
+        title: "",
+        time: "",
+        location: "",
+        desc: "",
+        map: ""
     });
-  });
+    saveData();
+    renderItinerary();
+}
 
-  // Simple TWD -> JPY
-  function convert() {
-    const rate = 4.8; // 可自行調整
-    const twd = document.getElementById('twd').value;
-    if (!twd) return;
-    document.getElementById('result').innerText = `${twd} TWD → ${(twd * rate).toFixed(0)} JPY`;
-  }
+// -------------------------------
+// 🌟 刪除行程
+// -------------------------------
+function deleteItem(index) {
+    itinerary.splice(index, 1);
+    saveData();
+    renderItinerary();
+}
+
+// -------------------------------
+// 🌟 拖曳移動排序
+// -------------------------------
+function moveItem(from, to) {
+    const item = itinerary.splice(from, 1)[0];
+    itinerary.splice(to, 0, item);
+    saveData();
+    renderItinerary();
+}
+
+// -------------------------------
+// 🌟 Input 即時更新
+// -------------------------------
+function attachInputListeners() {
+    document.querySelectorAll("input, textarea, .item-title").forEach(el => {
+        el.addEventListener("input", () => {
+            const index = el.dataset.index;
+            const field = el.dataset.field;
+
+            if (el.classList.contains("item-title")) {
+                itinerary[index].title = el.innerText.trim();
+            } else {
+                itinerary[index][field] = el.value;
+            }
+
+            saveData();
+        });
+    });
+}
+
+// -------------------------------
+// 🌟 存入 localStorage
+// -------------------------------
+function saveData() {
+    localStorage.setItem("itineraryData", JSON.stringify(itinerary));
+}
+
+// -------------------------------
+// 🌟 匯率換算 (台幣 ↔ 日幣)
+// -------------------------------
+function setupExchangeCalculator() {
+    const twd = document.getElementById("twd");
+    const jpy = document.getElementById("jpy");
+
+    function convert(from) {
+        const rate = 4.5; // 你可自訂匯率
+
+        if (from === "twd") {
+            jpy.value = (twd.value * rate).toFixed(0);
+        } else {
+            twd.value = (jpy.value / rate).toFixed(0);
+        }
+    }
+
+    twd.addEventListener("input", () => convert("twd"));
+    jpy.addEventListener("input", () => convert("jpy"));
+}
+
+// -------------------------------
+// 🌟 初始化
+// -------------------------------
+document.addEventListener("DOMContentLoaded", () => {
+    showTab('tab-itinerary');
+    renderItinerary();
+    setupExchangeCalculator();
+});
 </script>
-
-</body>
-</html>
